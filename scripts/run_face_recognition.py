@@ -14,17 +14,17 @@ from src.capture.video_source import VideoSource
 from src.inference.face_alignment import align_face
 from src.inference.face_detector import FaceDetector
 from src.inference.face_encoder import FaceEncoder
-from src.inference.face_matcher import FaceMatcher, MatchResult
+from src.inference.face_matcher import FaceMatcher, MatchResult, MultiGalleryMatcher
 
 
-def draw_match(frame: np.ndarray, detection, result: MatchResult) -> None:
+def draw_match(frame: np.ndarray, detection, result: MatchResult, label: str = "Top") -> None:
     """Draw a minimal face box and top-2 match summary on the frame."""
     x, y, width, height = detection.bbox
     cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 220, 0), 2)
     lines = (
-        f"Top1: {result.top1_identity} {result.top1_similarity:.2f}",
-        f"Top2: {result.top2_identity} {result.top2_similarity:.2f}",
-        f"Margin: {result.margin:.2f}",
+        f"{label} Top1: {result.top1_identity} {result.top1_similarity:.2f}",
+        f"{label} Top2: {result.top2_identity} {result.top2_similarity:.2f}",
+        f"{label} Margin: {result.margin:.2f}",
     )
     for offset, line in enumerate(lines):
         cv2.putText(
@@ -66,6 +66,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=int, default=0)
     parser.add_argument("--gallery", type=Path, default=Path("data/gallery/embeddings.npz"))
+    parser.add_argument("--multi-gallery", type=Path)
     parser.add_argument(
         "--detector-model",
         type=Path,
@@ -83,6 +84,9 @@ def main() -> None:
     args = parser.parse_args()
 
     matcher = FaceMatcher(args.gallery)
+    multi_matcher = MultiGalleryMatcher(args.multi_gallery) if args.multi_gallery else None
+    if multi_matcher and multi_matcher.identities != matcher.identities:
+        raise ValueError("Single and multi-gallery identities are not in the same order")
     detector = FaceDetector(args.detector_model)
     encoder = FaceEncoder(args.encoder_model)
     if encoder.embedding_dimension not in (None, matcher.embedding_dimension):
@@ -95,6 +99,8 @@ def main() -> None:
     detection_times: list[float] = []
     encoding_times: list[float] = []
     matching_times: list[float] = []
+    multi_max_times: list[float] = []
+    multi_top2_times: list[float] = []
     try:
         source = VideoSource(args.source)
         print(f"Webcam: {source.width:.0f}x{source.height:.0f}, reported FPS={source.fps:.2f}")
@@ -120,7 +126,41 @@ def main() -> None:
                 matching_started = time.perf_counter()
                 result = matcher.match(embedding)
                 matching_times.append((time.perf_counter() - matching_started) * 1000)
-                draw_match(frame, detection, result)
+                draw_match(frame, detection, result, "Single")
+                if multi_matcher:
+                    multi_started = time.perf_counter()
+                    multi_max_result = multi_matcher.match(embedding, "max")
+                    multi_max_times.append((time.perf_counter() - multi_started) * 1000)
+                    multi_started = time.perf_counter()
+                    multi_top2_result = multi_matcher.match(embedding, "top2_mean")
+                    multi_top2_times.append((time.perf_counter() - multi_started) * 1000)
+                    x, y, _, height = detection.bbox
+                    cv2.putText(
+                        frame,
+                        f"MAX T1 {multi_max_result.top1_identity} "
+                        f"{multi_max_result.top1_similarity:.2f} T2 "
+                        f"{multi_max_result.top2_similarity:.2f} M "
+                        f"{multi_max_result.margin:.2f}",
+                        (x, y + height + 18),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.42,
+                        (255, 180, 0),
+                        1,
+                        cv2.LINE_AA,
+                    )
+                    cv2.putText(
+                        frame,
+                        f"MEAN T1 {multi_top2_result.top1_identity} "
+                        f"{multi_top2_result.top1_similarity:.2f} T2 "
+                        f"{multi_top2_result.top2_similarity:.2f} M "
+                        f"{multi_top2_result.margin:.2f}",
+                        (x, y + height + 34),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.42,
+                        (255, 180, 0),
+                        1,
+                        cv2.LINE_AA,
+                    )
                 if args.expected_identity:
                     observations.append(
                         {
@@ -166,6 +206,10 @@ def main() -> None:
         print(f"average encoding latency: {np.mean(encoding_times):.2f} ms/face")
     if matching_times:
         print(f"average matching latency: {np.mean(matching_times):.4f} ms/face")
+    if multi_max_times:
+        print(f"average multi MAX matching latency: {np.mean(multi_max_times):.4f} ms/face")
+    if multi_top2_times:
+        print(f"average multi TOP-2 MEAN matching latency: {np.mean(multi_top2_times):.4f} ms/face")
     if args.expected_identity:
         print_observation_summary(observations, args.expected_identity)
         if args.observation_output and observations:
