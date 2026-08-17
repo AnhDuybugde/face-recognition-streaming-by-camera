@@ -203,7 +203,8 @@ def main() -> None:
     finally:
         if source is not None:
             source.release()
-        cv2.destroyAllWindows()
+        if not args.no_display:
+            cv2.destroyAllWindows()
 
     print(f"processed frames: {frame_count}")
     if frame_count:

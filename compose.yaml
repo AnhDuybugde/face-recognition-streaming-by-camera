@@ -10,3 +10,15 @@ services:
       python -m scripts.run_image_recognition
       --input /app/data/test.jpg
       --iterations 10
+
+  face-recognition-camera:
+    build:
+      context: .
+    image: streaming-face-recognition:cpu
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:ro
+    command: >-
+      python -m scripts.run_face_recognition
+      --source 0
+      --no-display

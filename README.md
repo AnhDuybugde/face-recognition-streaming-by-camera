@@ -92,6 +92,27 @@ docker compose run --rm face-recognition python -m scripts.run_image_recognition
 
 The default Compose command expects `/app/data/test.jpg`; override it as shown when using another file.
 
+To run the realtime recognition loop from Compose, use the separate camera service:
+
+```powershell
+docker compose run --rm face-recognition-camera
+```
+
+This service opens camera index `0` and runs without an OpenCV window. To stop it, press `Ctrl+C`.
+On Docker Desktop for Windows, a physical host webcam is generally not exposed to a Linux
+container as a camera device. If the container reports that camera `0` cannot be opened,
+run the same pipeline natively instead:
+
+```powershell
+python -m scripts.run_face_recognition --source 0
+```
+
+The Docker camera service is still useful for an OpenCV-readable video path or stream URL:
+
+```powershell
+docker compose run --rm face-recognition-camera python -m scripts.run_face_recognition --source /app/data/input/video.mp4 --no-display
+```
+
 ## GPU status
 
 Not implemented. The current encoder uses ONNX Runtime with `CPUExecutionProvider`, and YuNet uses OpenCV's CPU detector. A future GPU phase must add and verify the CUDA provider and compatible host/container runtime; GPU visibility alone is not sufficient evidence.
