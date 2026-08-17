@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import cv2
@@ -15,6 +15,7 @@ class FaceDetection:
     bbox: tuple[int, int, int, int]
     confidence: float
     landmarks: tuple[tuple[int, int], ...]
+    raw_detection: tuple[float, ...] = field(repr=False)
 
 
 class FaceDetector:
@@ -93,6 +94,7 @@ class FaceDetector:
                     bbox=(int(x), int(y), int(box_width), int(box_height)),
                     confidence=float(detection[14]),
                     landmarks=landmarks,
+                    raw_detection=tuple(float(value) for value in detection),
                 )
             )
         return results

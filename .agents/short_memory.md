@@ -2,7 +2,7 @@
 
 ## Current Session Goal
 
-Implement Phase 2 lightweight face detection.
+Implement Phase 3 one-shot enrollment and embedding gallery.
 
 ## Current State
 
@@ -13,17 +13,19 @@ Implement Phase 2 lightweight face detection.
 - OpenCV runtime and real webcam testing were not completed because the Windows command runner returned `CreateProcessAsUserW` error 1312.
 - YuNet model asset is not downloaded into `models/` yet.
 - User runtime test confirmed webcam opens, but YuNet inference fails with OpenCV 4.6.0 (`Layer with requested id=-1`).
+- Phase 3 pipeline ran successfully with OpenCV 5.0.0 on the local enrollment data.
+- Local data contains 51 images, not the expected 52.
+- 49 enrollments succeeded; `DE190384` and `DE190692` had no face detected.
+- Gallery validation passed: 49 identities, 128 dimensions, finite values, L2 norms approximately 1.
 
 ## Current Task
 
-Phase 2 is complete; stop before implementing recognition, enrollment, or tracking.
+Phase 3 is complete; stop before implementing webcam recognition or identity matching.
 
 ## Next Actions
 
-1. Upgrade to `opencv-python>=4.10.0`.
-2. Download the official YuNet ONNX asset to `models/face_detection_yunet_2023mar.onnx`.
-3. Run `python -m scripts.run_face_detection` with webcam and GUI access.
-4. Measure real detection latency/FPS and verify boxes/landmarks before Phase 3.
+1. Investigate the two enrollment images with no detected face if a full 52-identity gallery is required.
+2. Begin the later webcam recognition phase only after choosing a matching threshold from validation data.
 
 ## Open Questions
 
@@ -31,4 +33,4 @@ None currently.
 
 ## Last Session Summary
 
-Added `src/inference/face_detector.py` using OpenCV YuNet `FaceDetectorYN`, plus `scripts/run_face_detection.py` for boxes, confidence, landmarks, latency, and approximate FPS. Added `models/.gitkeep` and ignored ONNX assets. No recognition, enrollment, tracking, RTSP, Docker, or optimization was added. Model size is approximately 227 KB according to the official OpenCV Zoo listing; it is not present locally yet.
+Added `src/inference/face_alignment.py`, `src/inference/face_encoder.py`, and `scripts/build_gallery.py`. Selected OpenCV SFace/MobileFaceNet, 36.90 MiB model, 128-D embeddings. Generated and validated `data/gallery/embeddings.npz` with 49 normalized embeddings. Measured average YuNet detection 2.61 ms, average encoding 7.06 ms, and total enrollment processing 734.72 ms. Inter-identity cosine similarity: mean 0.5631, median 0.5701, min 0.1420, max 0.8152 for `DE200258 <-> DE200437`. No webcam recognition, matching, tracking, Docker, or optimization was added.

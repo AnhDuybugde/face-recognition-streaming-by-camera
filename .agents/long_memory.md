@@ -63,3 +63,8 @@ Format:
 - Decision: Use OpenCV YuNet through the `FaceDetectorYN` API for Phase 2.
 - Reason: It is a lightweight face-specific detector that provides bounding boxes, confidence scores, and five facial landmarks without adding a separate inference framework.
 - Consequence: The ONNX model remains an external, gitignored asset and runtime compatibility must be checked before inference.
+
+### 2026-08-17 — Store one-shot enrollment as normalized NPZ embeddings
+- Decision: Use OpenCV SFace/MobileFaceNet to produce 128-D L2-normalized embeddings and store the gallery in `data/gallery/embeddings.npz`.
+- Reason: The gallery is small, offline, and does not justify a database or vector index; OpenCV keeps CPU deployment simple.
+- Consequence: Enrollment images, model files, and generated biometric embeddings remain external runtime data and are excluded from Git.

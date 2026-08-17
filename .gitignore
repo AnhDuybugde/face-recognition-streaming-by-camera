@@ -29,6 +29,12 @@ data/output/*
 # External model assets
 models/*.onnx
 
+# Runtime biometric gallery and debug output
+data/gallery/*
+data/debug/*
+!data/gallery/.gitkeep
+!data/debug/.gitkeep
+
 # Logs
 *.log
 logs/
