@@ -75,7 +75,7 @@ def main() -> None:
     parser.add_argument(
         "--encoder-model",
         type=Path,
-        default=Path("models/face_recognition_sface_2021dec.onnx"),
+        default=Path("models/face_recognition_arcface_r50.onnx"),
     )
     parser.add_argument("--expected-identity", help="Enable genuine observation statistics")
     parser.add_argument("--observation-output", type=Path)

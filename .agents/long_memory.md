@@ -83,3 +83,8 @@ Format:
 - Decision: Keep the 51-entry gallery in memory and compute cosine similarity as a matrix-vector dot product.
 - Reason: L2-normalized 128-D embeddings make this exact operation simple and far below the cost of face inference at this gallery size.
 - Consequence: The live baseline reports Top-1, Top-2, and margin for later threshold calibration without introducing FAISS or a database.
+
+### 2026-08-17 — Use ArcFace R50 as the single production encoder
+- Decision: Replace SFace/MobileFaceNet with the single `w600k_r50.onnx` ArcFace R50 encoder and rebuild the production gallery as one normalized embedding per identity.
+- Reason: The user chose a larger, stronger single encoder instead of combining multiple encoders or synthetic variants.
+- Consequence: The production gallery is `51 x 512`; runtime still performs one encoder call per detected face, with higher CPU latency than SFace.

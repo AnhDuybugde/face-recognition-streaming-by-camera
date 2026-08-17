@@ -2,7 +2,7 @@
 
 ## Current Session Goal
 
-Compare single-embedding and light-augmentation multi-embedding galleries.
+Replace SFace with a single ArcFace R50 production encoder.
 
 ## Current State
 
@@ -23,7 +23,7 @@ Compare single-embedding and light-augmentation multi-embedding galleries.
 
 ## Current Task
 
-Multi-embedding gallery experiment is complete; stop before threshold calibration or attendance logic.
+ArcFace R50 production gallery rebuild is complete; stop before threshold calibration or attendance logic.
 
 ## Utility Added
 
@@ -44,11 +44,18 @@ Multi-embedding gallery experiment is complete; stop before threshold calibratio
 - Offline matching latency was 0.0649 ms/query single, 0.0272 ms/query multi MAX, and 0.0403 ms/query multi TOP-2 MEAN.
 - Offline inter-identity statistics: MAX mean/median/min/max = 0.1903/0.1865/-0.1377/0.4914; TOP-2 MEAN = 0.1858/0.1831/-0.1384/0.4909. Both maximum pairs were DE190523 <-> SE200086.
 - A 10-frame webcam run succeeded at approximately 20.06 FPS with 10.32 ms detection/frame, but no face was present, so no live Top-1/Top-2/margin or query encoding latency was collected.
+- User selected one larger ArcFace R50 encoder instead of multi-encoder fusion or multi-embedding production.
+- Added `models/face_recognition_arcface_r50.onnx` and replaced the production encoder implementation with ONNX Runtime.
+- ArcFace input is 112x112 BGR converted with `swapRB=True`, mean/std 127.5; model output is 512 dimensions.
+- Rebuilt `data/gallery/embeddings.npz`: 51 successful identities, shape `(51, 512)`, finite and L2-normalized.
+- ArcFace enrollment metrics: average detection 2.27 ms/image, average encoding 59.64 ms/image, total 3220.17 ms.
+- ArcFace inter-identity cosine statistics: mean 0.1001, median 0.0943, min -0.1709, max 0.4274 for `DE200022 <-> DE200206`.
+- ArcFace runtime smoke test processed 10 webcam frames at 18.97 FPS with 8.72 ms detection/frame; no face was visible, so live encoding/matching similarity remains unmeasured.
 
 ## Next Actions
 
-1. Run the webcam comparison with a visible enrolled face and collect genuine/impostor Top-1, Top-2, and margin observations.
-2. Compare multi-gallery behavior on labeled live samples before choosing a gallery strategy.
+1. Run webcam recognition with a visible enrolled face and collect genuine/impostor Top-1, Top-2, and margin observations.
+2. Benchmark ArcFace live query latency/FPS against the previous SFace baseline.
 3. Calibrate a KNOWN/UNKNOWN policy only after live observations exist.
 
 ## Open Questions
@@ -57,4 +64,4 @@ None currently.
 
 ## Last Session Summary
 
-Added `src/inference/face_alignment.py`, `src/inference/face_encoder.py`, and `scripts/build_gallery.py`. Selected OpenCV SFace/MobileFaceNet, 36.90 MiB model, 128-D embeddings. Added reusable max-side-320 preprocessing for oversized enrollment images and explicit width-height YuNet input sizing. Corrected landmark ordering so aligned faces remain upright, then rebuilt and validated `data/gallery/embeddings.npz` with 51 normalized embeddings. Latest enrollment metrics: average detection 1.72 ms, encoding 6.61 ms, total 476.32 ms. Inter-identity cosine similarity: mean 0.1659, median 0.1648, min -0.1610, max 0.4812 for `DE190523 <-> SE200086`. Added and tested `scripts/check_face.py` for single-image YuNet inspection. Phase 4 added normalized NumPy Top-2 matching and live visualization with optional observation statistics. The multi-embedding experiment added five mild post-alignment variants and MAX/TOP-2 MEAN aggregation. A 10-frame webcam smoke test reached 20.06 FPS and 10.32 ms detection/frame but detected no face, so live similarity behavior remains unmeasured.
+Replaced the production SFace/MobileFaceNet encoder with ArcFace R50 through ONNX Runtime. Rebuilt and validated the production gallery with 51 normalized 512-D embeddings. ArcFace enrollment measured 2.27 ms detection/image, 59.64 ms encoding/image, and 3220.17 ms total; inter-identity cosine mean 0.1001 and max 0.4274 for `DE200022 <-> DE200206`. The earlier multi-embedding experiment remains experimental and is not the production gallery. Live ArcFace query similarity and FPS with a visible face remain unmeasured.

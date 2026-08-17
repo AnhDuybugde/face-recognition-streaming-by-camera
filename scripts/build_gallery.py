@@ -1,4 +1,4 @@
-"""Build a normalized SFace embedding gallery from enrollment images."""
+"""Build a normalized ArcFace R50 embedding gallery from enrollment images."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def main() -> None:
     parser.add_argument(
         "--encoder-model",
         type=Path,
-        default=Path("models/face_recognition_sface_2021dec.onnx"),
+        default=Path("models/face_recognition_arcface_r50.onnx"),
     )
     args = parser.parse_args()
 

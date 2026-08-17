@@ -54,8 +54,8 @@ def validate_multi_gallery(identities: list[str], embeddings: np.ndarray) -> Non
     """Validate the explicit identity/variant/embedding dimensions."""
     if embeddings.ndim != 3 or embeddings.shape[0] != len(identities):
         raise ValueError("Multi-gallery identities and embeddings have incompatible shapes")
-    if embeddings.shape[1:] != (5, 128):
-        raise ValueError(f"Expected multi-gallery shape (N, 5, 128), got {embeddings.shape}")
+    if embeddings.shape[1] != 5 or embeddings.shape[2] == 0:
+        raise ValueError(f"Expected multi-gallery shape (N, 5, D), got {embeddings.shape}")
     if not np.isfinite(embeddings).all():
         raise ValueError("Multi-gallery contains non-finite values")
     if not np.allclose(np.linalg.norm(embeddings, axis=2), 1.0, atol=1e-5):
@@ -107,7 +107,7 @@ def main() -> None:
     parser.add_argument("--single-copy", type=Path, default=Path("data/gallery/embeddings_single.npz"))
     parser.add_argument("--multi-gallery", type=Path, default=Path("data/gallery/embeddings_multi.npz"))
     parser.add_argument("--detector-model", type=Path, default=Path("models/face_detection_yunet_2023mar.onnx"))
-    parser.add_argument("--encoder-model", type=Path, default=Path("models/face_recognition_sface_2021dec.onnx"))
+    parser.add_argument("--encoder-model", type=Path, default=Path("models/face_recognition_arcface_r50.onnx"))
     args = parser.parse_args()
 
     image_paths = sorted(path for path in args.input.iterdir() if path.suffix.lower() in SUPPORTED_EXTENSIONS)
