@@ -73,3 +73,13 @@ Format:
 - Decision: Before enrollment detection, downscale only images whose longest side exceeds 320 pixels, preserving aspect ratio; keep smaller images unchanged.
 - Reason: Controlled diagnostics showed YuNet failed on two large source images but succeeded after resizing to 320, without changing thresholds or adding retries.
 - Consequence: Detection, landmarks, alignment, and embedding for enrollment operate on the resized image; no coordinate remapping is needed for the current offline gallery.
+
+### 2026-08-17 — Keep five-point face alignment upright
+- Decision: Map YuNet's five landmark coordinates directly to the SFace upright template without an additional eye/mouth order swap.
+- Reason: The previous extra swap produced visibly rotated aligned faces and inconsistent gallery embeddings.
+- Consequence: The gallery must be rebuilt whenever this alignment convention changes; the current gallery uses the corrected upright alignment.
+
+### 2026-08-17 — Match the small gallery with normalized NumPy dot products
+- Decision: Keep the 51-entry gallery in memory and compute cosine similarity as a matrix-vector dot product.
+- Reason: L2-normalized 128-D embeddings make this exact operation simple and far below the cost of face inference at this gallery size.
+- Consequence: The live baseline reports Top-1, Top-2, and margin for later threshold calibration without introducing FAISS or a database.

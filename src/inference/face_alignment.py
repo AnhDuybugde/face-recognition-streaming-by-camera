@@ -26,17 +26,9 @@ def align_face(
     if len(yunet_landmarks) != 5:
         raise ValueError("Face alignment requires exactly five landmarks")
 
-    # YuNet returns right eye, left eye, nose, right mouth, left mouth.
-    source = np.asarray(
-        [
-            yunet_landmarks[1],
-            yunet_landmarks[0],
-            yunet_landmarks[2],
-            yunet_landmarks[4],
-            yunet_landmarks[3],
-        ],
-        dtype=np.float32,
-    )
+    # YuNet's returned points are already ordered left-to-right in image
+    # coordinates for this alignment template.
+    source = np.asarray(yunet_landmarks, dtype=np.float32)
     transform, _ = cv2.estimateAffinePartial2D(source, _SFACE_TEMPLATE)
     if transform is None:
         raise ValueError("Could not estimate a face alignment transform")
