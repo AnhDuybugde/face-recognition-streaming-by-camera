@@ -8,6 +8,19 @@ from pathlib import Path
 import cv2
 
 
+def resize_for_detection(frame, max_side: int = 320):
+    """Downscale oversized frames while preserving their aspect ratio."""
+    height, width = frame.shape[:2]
+    longest_side = max(width, height)
+    if longest_side <= max_side:
+        return frame
+
+    scale = max_side / longest_side
+    resized_width = max(1, round(width * scale))
+    resized_height = max(1, round(height * scale))
+    return cv2.resize(frame, (resized_width, resized_height))
+
+
 @dataclass(frozen=True)
 class FaceDetection:
     """A detected face with its box, confidence, and five landmarks."""
@@ -63,13 +76,17 @@ class FaceDetector:
                 "opencv-python>=4.10.0."
             ) from error
 
+    def set_input_size(self, frame) -> None:
+        """Set YuNet input size using the frame's width-height order."""
+        height, width = frame.shape[:2]
+        self._detector.setInputSize((width, height))
+
     def detect(self, frame) -> list[FaceDetection]:
         """Detect faces in a BGR frame and return normalized detection records."""
         if frame is None or getattr(frame, "ndim", 0) != 3:
             raise ValueError("detect() expects a valid color image frame")
 
-        height, width = frame.shape[:2]
-        self._detector.setInputSize((width, height))
+        self.set_input_size(frame)
         try:
             _, detections = self._detector.detect(frame)
         except cv2.error as error:

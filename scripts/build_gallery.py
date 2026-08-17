@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from src.inference.face_alignment import align_face
-from src.inference.face_detector import FaceDetector
+from src.inference.face_detector import FaceDetector, resize_for_detection
 from src.inference.face_encoder import FaceEncoder
 
 
@@ -47,9 +47,11 @@ def process_image(
     if image is None:
         return EnrollmentResult(identity, None, "unreadable image")
 
+    detection_image = resize_for_detection(image, max_side=320)
     detection_started = time.perf_counter()
     try:
-        faces = detector.detect(image)
+        detector.set_input_size(detection_image)
+        faces = detector.detect(detection_image)
     except (RuntimeError, ValueError) as error:
         return EnrollmentResult(identity, None, f"detection failure: {error}")
     detection_ms = (time.perf_counter() - detection_started) * 1000
@@ -61,7 +63,7 @@ def process_image(
 
     encoding_started = time.perf_counter()
     try:
-        aligned = align_face(image, faces[0].landmarks)
+        aligned = align_face(detection_image, faces[0].landmarks)
         embedding = normalize_embedding(encoder.encode(aligned))
     except (RuntimeError, ValueError) as error:
         return EnrollmentResult(

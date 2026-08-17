@@ -68,3 +68,8 @@ Format:
 - Decision: Use OpenCV SFace/MobileFaceNet to produce 128-D L2-normalized embeddings and store the gallery in `data/gallery/embeddings.npz`.
 - Reason: The gallery is small, offline, and does not justify a database or vector index; OpenCV keeps CPU deployment simple.
 - Consequence: Enrollment images, model files, and generated biometric embeddings remain external runtime data and are excluded from Git.
+
+### 2026-08-17 — Normalize oversized enrollment images before YuNet
+- Decision: Before enrollment detection, downscale only images whose longest side exceeds 320 pixels, preserving aspect ratio; keep smaller images unchanged.
+- Reason: Controlled diagnostics showed YuNet failed on two large source images but succeeded after resizing to 320, without changing thresholds or adding retries.
+- Consequence: Detection, landmarks, alignment, and embedding for enrollment operate on the resized image; no coordinate remapping is needed for the current offline gallery.
