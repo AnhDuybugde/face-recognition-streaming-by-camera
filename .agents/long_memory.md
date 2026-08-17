@@ -88,3 +88,8 @@ Format:
 - Decision: Replace SFace/MobileFaceNet with the single `w600k_r50.onnx` ArcFace R50 encoder and rebuild the production gallery as one normalized embedding per identity.
 - Reason: The user chose a larger, stronger single encoder instead of combining multiple encoders or synthetic variants.
 - Consequence: The production gallery is `51 x 512`; runtime still performs one encoder call per detected face, with higher CPU latency than SFace.
+
+### 2026-08-17 — Keep runtime data external to the container
+- Decision: Use a CPU-first Python container with application code/dependencies in the image and mount `/app/models` and `/app/data` at runtime.
+- Reason: Models, enrollment photos, videos, and biometric gallery embeddings are local/private runtime assets and should not be baked into the image.
+- Consequence: A teammate must provide the external model and gallery files before running the mounted deterministic image test.

@@ -17,6 +17,14 @@ from src.inference.face_encoder import FaceEncoder
 from src.inference.face_matcher import FaceMatcher, MatchResult, MultiGalleryMatcher
 
 
+def parse_source(value: str) -> int | str:
+    """Parse a numeric camera index or a path/URL accepted by OpenCV."""
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
 def draw_match(frame: np.ndarray, detection, result: MatchResult, label: str = "Top") -> None:
     """Draw a minimal face box and top-2 match summary on the frame."""
     x, y, width, height = detection.bbox
@@ -64,7 +72,7 @@ def print_observation_summary(observations: list[dict[str, object]], expected: s
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=int, default=0)
+    parser.add_argument("--source", type=parse_source, default=0)
     parser.add_argument("--gallery", type=Path, default=Path("data/gallery/embeddings.npz"))
     parser.add_argument("--multi-gallery", type=Path)
     parser.add_argument(

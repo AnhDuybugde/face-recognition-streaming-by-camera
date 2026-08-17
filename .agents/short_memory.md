@@ -23,7 +23,7 @@ Replace SFace with a single ArcFace R50 production encoder.
 
 ## Current Task
 
-ArcFace R50 production gallery rebuild is complete; stop before threshold calibration or attendance logic.
+Phase 5 Docker packaging and CPU validation are complete; stop before GPU, webcam passthrough, or service/API work.
 
 ## Utility Added
 
@@ -55,12 +55,27 @@ ArcFace R50 production gallery rebuild is complete; stop before threshold calibr
 ## Next Actions
 
 1. Run webcam recognition with a visible enrolled face and collect genuine/impostor Top-1, Top-2, and margin observations.
-2. Benchmark ArcFace live query latency/FPS against the previous SFace baseline.
-3. Calibrate a KNOWN/UNKNOWN policy only after live observations exist.
+2. Calibrate a KNOWN/UNKNOWN policy only after live observations exist.
+3. Consider tracking or detect-every-N-frame optimization only after measuring live workload.
 
 ## Open Questions
 
 None currently.
+
+## Phase 5 Packaging Notes
+
+- Added CPU-first `Dockerfile` based on `python:3.10-slim`.
+- Added pinned `requirements-docker.txt` with headless OpenCV and ONNX Runtime dependencies.
+- Added one-service `compose.yaml`.
+- Runtime mounts are `/app/models` and `/app/data`; private gallery and media remain outside the image.
+- Added `scripts.run_image_recognition` for repeatable image-based detection/encoding/matching benchmarks.
+- `run_face_recognition --source` now accepts a camera index or an OpenCV-readable path/URL.
+- README documents native, Docker, Compose, GPU status, data policy, and Windows webcam limitation.
+- Python syntax compilation passed. Docker build, Docker run, Compose validation/run, and native deterministic benchmark passed after enabling Docker Desktop; the runner required escalated process execution because of Windows session error 1312.
+- Native deterministic benchmark, 10 iterations on `DE190469.jpg`: detection 8.27 ms, encoding 80.22 ms, end-to-end 88.88 ms, approximately 11.25 FPS, match `DE190469` at 1.0000.
+- Docker CPU deterministic benchmark, same input and 10 iterations: detection 9.55 ms, encoding 132.22 ms, end-to-end 144.98 ms, approximately 6.90 FPS, match `DE190469` at 0.9999.
+- Compose test passed for 3 iterations: match `DE190469` at 0.9999, detection 4.60 ms, encoding 120.05 ms, end-to-end 126.83 ms, approximately 7.88 FPS.
+- Docker image contains source/dependencies only; models and private data are mounted read-only at `/app/models` and `/app/data`.
 
 ## Last Session Summary
 

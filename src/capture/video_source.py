@@ -10,7 +10,7 @@ import cv2
 class VideoSource:
     """Open and read frames from a local video source."""
 
-    def __init__(self, source: int = 0, max_consecutive_failures: int = 3) -> None:
+    def __init__(self, source: int | str = 0, max_consecutive_failures: int = 3) -> None:
         if max_consecutive_failures < 1:
             raise ValueError("max_consecutive_failures must be at least 1")
 
